@@ -108,79 +108,6 @@ void fft2D(Complex *image, int width, int height) {
     }
 }
 
-
-//--------------------------INVERSAO DE FFT--------------------------
-
-// Função para desnormalizar
-void loadMagnitudeAndPhase(Image magnitude, Image phase, int width, int height) {
-
-    // Ler os valores normalizados (0-255) e reverter para os valores originais
-    for (int i = 0; i < width * height; i++) {
-        unsigned char magByte, phaseByte;
-        magByte = magnitude.data[i];
-        phaseByte = phase.data[i];
-        // fread(&magByte, sizeof(unsigned char), 1, fmag);
-        // fread(&phaseByte, sizeof(unsigned char), 1, fphase);
-        
-        // Normalizar de volta para os valores originais
-        // magnitude.data[i] = exp(((double)magByte / 255.0) * log(1 + 1000)) - 1; // Desfaz normalização do log
-        phase.data[i] = ((double)phaseByte / 255.0) * (2 * PI) - PI; // Volta para -π a π
-    }
-}
-
-// Função para reconstruir os valores complexos
-void reconstructComplexImage(Complex* imageFFT, Image magnitude, Image phase) {
-    for (int i = 0; i < magnitude.width * magnitude.height; i++) {
-        imageFFT[i].real = magnitude.data[i] * cos(phase.data[i]);
-        imageFFT[i].imag = magnitude.data[i] * sin(phase.data[i]);
-    }
-}
-
-// Função de Transformada Inversa de Fourier (IFFT) - Algoritmo direto (não otimizado)
-void IFFT(Complex* input, Complex* output, int width, int height) {
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
-            Complex sum = {0, 0};
-
-            for (int u = 0; u < width; u++) {
-                for (int v = 0; v < height; v++) {
-                    double angle = 2 * PI * ((u * x / (double)width) + (v * y / (double)height));
-                    double cosAngle = cos(angle);
-                    double sinAngle = sin(angle);
-
-                    sum.real += input[u * width + v].real * cosAngle - input[u * width + v].imag * sinAngle;
-                    sum.imag += input[u * width + v].real * sinAngle + input[u * width + v].imag * cosAngle;
-                }
-            }
-            
-            // Dividindo pelo número total de elementos para normalizar
-            output[x * width + y].real = sum.real / (width * height);
-            output[x * width + y].imag = sum.imag / (width * height);
-        }
-    }
-}
-
-// Função para converter a imagem reconstruída em valores de 0-255 para exibição
-void saveImagePGM(Complex* image, const char* filename, int width, int height) {
-    FILE *file = fopen(filename, "wb");
-    if (!file) {
-        printf("Erro ao salvar a imagem reconstruída!\n");
-        exit(1);
-    }
-
-    fprintf(file, "P5\n%d %d\n255\n", width, height);
-    
-    for (int i = 0; i < width * height; i++) {
-        unsigned char pixel = (unsigned char)fmax(0, fmin(255, image[i].real)); // Garantindo faixa válida
-        fwrite(&pixel, sizeof(unsigned char), 1, file);
-    }
-
-    fclose(file);
-}
-
-
-
-
 // Função principal
 int main(int argc, char **argv) { // 1: caminho da imagem, 2: Caminho do resultado
     if (argc != 3) {
@@ -220,48 +147,15 @@ int main(int argc, char **argv) { // 1: caminho da imagem, 2: Caminho do resulta
     //     fftMagnitude.data[i] = (unsigned char)((fftMagnitude.data[i] / log(1 + maxMagnitude)) * 255);
     // }
 
-    // Criando uma imagem com a fase da FFT
-    Image fftPhase;
-    fftPhase.width = width;
-    fftPhase.height = height;
-    fftPhase.data = (unsigned char *)malloc(width * height);
-
-    double maxPhase = 2 * PI;
-    for (int i = 0; i < width * height; i++) {
-        double phase = atan2(imageFFT[i].imag, imageFFT[i].real);
-        // fftPhase.data[i] = (unsigned char)(((phase + PI) / maxPhase) * 255); // Normalizando fase
-        fftPhase.data[i] = phase;
-    }
-
     // Salvando a imagem
     savePGM(argv[2], fftMagnitude);
 
     printf("FFT salva como %s\n", argv[2]);
 
-    //--------------------------INVERSAO DE FFT--------------------------
-
-    Complex* reconstructedImage = (Complex*)malloc(width * height * sizeof(Complex));
-
-    // Carregar os dados salvos de magnitude e fase
-    // loadMagnitudeAndPhase(fftMagnitude, fftPhase, width, height);
-
-    // Reconstituir os números complexos
-    reconstructComplexImage(imageFFT, fftMagnitude, fftPhase);
-
-    // Aplicar a Transformada Inversa de Fourier
-    IFFT(imageFFT, reconstructedImage, width, height);
-
-    // Salvar a imagem reconstruída
-    saveImagePGM(reconstructedImage, "reconstructed.pgm", width, height);
-
-
     // Liberando memória
     free(img.data);
     free(imageFFT);
     free(fftMagnitude.data);
-    free(reconstructedImage);
-
-    printf("Imagem reconstruída salva como 'reconstructed.pgm'.\n");
 
     return 0;
 }
