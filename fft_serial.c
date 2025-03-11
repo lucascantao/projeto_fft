@@ -199,8 +199,52 @@ int main(int argc, char** argv){
     // Write FFT image
     pgm_write_fft(img, "results/fft.pgm", "");
 
-    v_data = ifftshift(mat2vet(img.data, img.width, img.height), img.width, img.height);
+    //################# START FILTERING #################
 
+    // Aplicar fftshift antes do filtro para mover as baixas frequências para o centro
+    v_data = fftshift(v_data, img.width, img.height);
+
+    // Definir raio de corte para o filtro passa-baixa
+    double cutoff = 0.1 * img.width;  // 20% do tamanho da imagem (ajustável)
+
+    // Criar e aplicar a máscara do filtro passa-baixa
+    int cx = img.width / 2;  // Centro X
+    int cy = img.height / 2; // Centro Y
+
+    for (int y = 0; y < img.height; y++) {
+        for (int x = 0; x < img.width; x++) {
+            // Distância do centro da imagem FFT
+            double dist = sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+
+            // Se estiver FORA do raio de corte, zera
+            if (dist < cutoff) {
+                v_data[y * img.width + x] = 0;
+            }
+        }
+    }
+
+    // Criar imagem FFT filtrada para salvar
+    pgm_t filtered_fft_img;
+    filtered_fft_img.width = img.width;
+    filtered_fft_img.height = img.height;
+    filtered_fft_img.max = img.max;
+    strcpy(filtered_fft_img.type, img.type);
+
+    // Salvar a FFT filtrada (após fftshift para exibição correta)
+    filtered_fft_img.data = vet2mat(v_data, img.width, img.height);
+    pgm_write_fft(filtered_fft_img, "results/filtered_fft.pgm", "");
+
+    // Desfazer o shift para voltar ao domínio correto antes da IFFT
+    // v_data = ifftshift(v_data, img.width, img.height);
+
+    // Liberar memória
+    free(filtered_fft_img.data);
+
+    //################# END FILTERING #################
+
+    // Aplicar o shift para voltar ao domínio correto
+    // Comentar para para reconstruir a imagem a partir do v_data alterado (usar o filtro)
+    v_data = ifftshift(mat2vet(img.data, img.width, img.height), img.width, img.height);
 
     //################# START 2D iFFT #################
     // Perform 1D iFFT
