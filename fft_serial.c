@@ -244,7 +244,7 @@ int main(int argc, char** argv){
 
     // Aplicar o shift para voltar ao domínio correto
     // Comentar para para reconstruir a imagem a partir do v_data alterado (usar o filtro)
-    v_data = ifftshift(mat2vet(img.data, img.width, img.height), img.width, img.height);
+    // v_data = ifftshift(mat2vet(img.data, img.width, img.height), img.width, img.height);
 
     //################# START 2D iFFT #################
     // Perform 1D iFFT
