@@ -21,7 +21,7 @@ Execute o programa
 O programa suporta apenas imagens .pgm sem compressão (P2). Se sua imagem .pgm for do tipo P5 (comprimido), use o comando abaixo para converter a imagem para o formato certo
 
 ```bash
-  convertere <caminho_da_imagem.pgm>
+  convertere <imagem_dentro_da_pasta_pgm_sem_caminho_absoluto.pgm>
 ```
 
 A imagem convertida será armazenada na pasta P2/.
