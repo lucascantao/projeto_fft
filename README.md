@@ -25,3 +25,12 @@ O programa suporta apenas imagens .pgm sem compressão (P2). Se sua imagem .pgm 
 ```
 
 A imagem convertida será armazenada na pasta P2/.
+
+
+## Rodando a versão paralela
+
+Rode o arquivo com a implementacao paralela, abra o terminal e rode
+
+```bash
+  gcc -Wall -o fft_omp -lm -std=c99 cshift.c pgm.c fft_omp.c -fopenmp
+```
