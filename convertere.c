@@ -56,11 +56,21 @@ void convertP5toP2(const char *inputFile, const char *outputFile) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    if (argc != 2) {
         printf("Uso: %s <input.pgm> <output.pgm>\n", argv[0]);
         return 1;
     }
 
-    convertP5toP2(argv[1], argv[2]);
+    // Definir a subpasta onde será salvo
+    const char *path_out = "P2/";
+    const char *path_in = "pgm/";
+
+    // Criar o caminho completo do arquivo de saída
+    char caminho_saida[256]; // Ajuste o tamanho se necessário
+    char caminho_entrada[256]; // Ajuste o tamanho se necessário
+    snprintf(caminho_saida, sizeof(caminho_saida), "%s%s", path_out, argv[1]);
+    snprintf(caminho_entrada, sizeof(caminho_entrada), "%s%s", path_in, argv[1]);
+
+    convertP5toP2(caminho_entrada, caminho_saida);
     return 0;
 }
